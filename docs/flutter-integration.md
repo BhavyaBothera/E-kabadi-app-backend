@@ -1,367 +1,225 @@
-# Flutter Integration Guide for E-Kabadi
+# E-Kabadi Flutter ↔ Backend Integration Guide
 
-This guide explains how Flutter engineers can connect the existing frontend (`./frontend`) to the production-ready Node.js/TypeScript backend (`./backend`).
-
----
-
-## 1. Network & Environment Setup
-
-### 1.1 Base URL Configuration
-Create or update an API configuration constant in Flutter:
-
-```dart
-// lib/config/api_config.dart
-import 'dart:io';
-
-class ApiConfig {
-  // Use 10.0.2.2 for Android emulator, localhost for iOS simulator/Web, or production URL
-  static String get baseUrl {
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5000/api/v1';
-    } else {
-      return 'http://localhost:5000/api/v1';
-    }
-  }
-
-  static const String productionUrl = 'https://api.e-kabadi.com/api/v1';
-}
-```
-
-### 1.2 Authentication Header
-All authenticated requests must include the JWT token in the `Authorization` header:
-```http
-Authorization: Bearer <supabase_access_token_or_dev_token>
-```
-During development and testing, mock tokens are accepted:
-- `mock-citizen-token` -> Authenticates as Aarav Sharma (`mock-citizen-001`, role: `citizen`)
-- `mock-collector-token` -> Authenticates as Rajesh Kumar (`mock-collector-001`, role: `collector`)
-- `mock-admin-token` -> Authenticates as System Admin (`mock-admin-001`, role: `admin`)
+This guide documents the complete production integration between the Flutter frontend (`./frontend`) and the Node.js/TypeScript backend (`./backend`) verified against the live Supabase instance.
 
 ---
 
-## 2. API Response Wrapper Contract
+## 1. Flutter Setup & Dependencies
 
-Every backend response follows a unified format:
+The Flutter frontend communicates with the Node.js backend using standard HTTP and Riverpod state management.
 
-### Success (HTTP 200 / 201)
-```json
-{
-  "success": true,
-  "data": { ... },
-  "message": "Operation completed successfully",
-  "requestId": "550e8400-e29b-41d4-a716-446655440000"
-}
+### Key Dependencies (`pubspec.yaml`):
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.0
+  intl: ^0.19.0
+  lucide_icons: ^0.257.0
+  image_picker: ^1.1.2
+  http: ^1.2.2
 ```
 
-### Error (HTTP 400 / 401 / 403 / 404 / 409 / 500)
-```json
-{
-  "success": false,
-  "error": {
-    "message": "Invalid status transition from 'verified' to 'pending'",
-    "code": "INVALID_STATUS_TRANSITION"
-  },
-  "requestId": "550e8400-e29b-41d4-a716-446655440000"
-}
+Run inside `./frontend`:
+```bash
+flutter pub get
 ```
 
 ---
 
-## 3. Replacing Mock Services with Real API Calls
+## 2. Backend Startup
 
-### 3.1 Authentication & Profile Service
-
-#### Login
-- **Endpoint**: `POST /auth/login`
-- **Request Body**:
-```json
-{
-  "email": "aarav.sharma@example.com",
-  "password": "Password123!",
-  "role": "citizen"
-}
-```
-- **Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "token": "eyJhbGciOi...",
-    "user": {
-      "id": "mock-citizen-001",
-      "name": "Aarav Sharma",
-      "phone": "+91 98765 12345",
-      "email": "aarav.sharma@example.com",
-      "role": "citizen",
-      "address": "Flat 402, Green Valley Apts, Sector 62, Noida, UP",
-      "rating": 4.8,
-      "isVerified": true,
-      "ecoPoints": 840,
-      "ecoCoins": 0,
-      "profilePhoto": ""
-    }
-  }
-}
+### Start Live Server:
+```bash
+cd backend
+npm run build
+npm start
 ```
 
-#### Fetch Current User (`GET /users/me`)
-```dart
-Future<UserModel> fetchCurrentUser(String token) async {
-  final res = await http.get(
-    Uri.parse('${ApiConfig.baseUrl}/users/me'),
-    headers: {'Authorization': 'Bearer $token'},
-  );
-  final json = jsonDecode(res.body);
-  return UserModel.fromJson(json['data']);
-}
+### Start in Development / Hot-Reload Mode:
+```bash
+cd backend
+npm run dev
 ```
+
+The server starts on port `5000` with the base route `http://localhost:5000/api/v1`.
 
 ---
 
-### 3.2 AI Scrap Recognition & Rate Card
+## 3. Environment Configuration
 
-#### Scrap Rate Card
-- **Endpoint**: `GET /scrap/rates`
-- **Response**:
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "rate-1",
-      "category": "Paper",
-      "subCategory": "Newspaper",
-      "ratePerKg": 14.0,
-      "unit": "kg",
-      "priceChange": "+2%",
-      "iconName": "newspaper"
-    },
-    {
-      "id": "rate-2",
-      "category": "Plastic",
-      "subCategory": "PET Bottles",
-      "ratePerKg": 16.0,
-      "unit": "kg",
-      "priceChange": "+5%",
-      "iconName": "water_bottle"
-    }
-  ]
-}
+The backend connects to the live Supabase instance via `.env`:
+```ini
+PORT=5000
+NODE_ENV=development
+SUPABASE_URL=https://psvyucnqxavtrfkajaki.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOi...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+LIVE_DB=true
 ```
 
-#### AI Image Analysis
-- **Endpoint**: `POST /scrap/analyze`
-- **Request Body**:
-```json
-{
-  "imageBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRg...",
-  "fileName": "scrap_pile.jpg"
-}
-```
-- **Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "detectedCategory": "Plastic",
-    "subCategory": "PET Bottles",
-    "estimatedWeightKg": 3.5,
-    "confidenceScore": 0.94,
-    "ratePerKg": 16.0,
-    "estimatedValue": 56.0,
-    "recyclabilityTips": "Rinse clean and flatten bottles to save space."
-  }
-}
-```
+> [!CAUTION]
+> The `SUPABASE_SERVICE_ROLE_KEY` must NEVER be exposed, bundled, or sent to Flutter. Flutter interacts exclusively with the Node.js API using real user JWT access tokens.
 
 ---
 
-### 3.3 Pickup Lifecycle & State Machine
+## 4. Platform Base URLs
+
+The Flutter API layer (`lib/core/config/api_config.dart`) dynamically resolves the backend URL based on the running host:
+
+| Platform | URL | Note |
+|---|---|---|
+| **Android Emulator** | `http://10.0.2.2:5000/api/v1` | Automatically routed to host machine |
+| **iOS Simulator** | `http://localhost:5000/api/v1` | Runs on macOS host loopback |
+| **Flutter Web** | `http://localhost:5000/api/v1` | Runs directly in browser |
+| **Physical Device (LAN)** | `http://<YOUR_LAN_IP>:5000/api/v1` | Set via `--dart-define=API_URL=http://<IP>:5000/api/v1` |
+| **Production Cloud** | `https://api.e-kabadi.com/api/v1` | Set via `--dart-define=API_URL=...` |
+
+---
+
+## 5. Authentication Flow (Real Supabase JWT)
 
 ```mermaid
-stateDiagram-v2
-    [*] --> pending
-    pending --> matching: Auto-assigned or searching
-    matching --> accepted: Collector accepts
-    accepted --> onTheWay: Collector starts moving
-    onTheWay --> arrived: Collector arrives at doorstep
-    arrived --> verified: OTP & final scale weight verified
-    verified --> completed: Payment confirmed & completed
-    pending --> cancelled: Cancelled by citizen or collector
-    matching --> cancelled
-    accepted --> cancelled
+sequenceDiagram
+    autonumber
+    actor User as Citizen / Collector
+    participant App as Flutter Frontend
+    participant API as Node.js API (/api/v1)
+    participant Supa as Supabase Auth / DB
+
+    User->>App: Enters Phone (+91 98765 12345)
+    App->>API: POST /auth/login { phone }
+    API->>Supa: Lookup user profile & auth.users
+    Supa-->>API: User authenticated
+    API->>Supa: signInWithPassword (Supabase Auth)
+    Supa-->>API: Real Supabase JWT access_token
+    API-->>App: { user: {...}, token: "<REAL_SUPABASE_JWT>" }
+    App->>App: Store token in TokenStorage
+    App->>API: GET /users/me with Authorization: Bearer <JWT>
+    API->>Supa: getUser(token) [Validates JWT]
+    API-->>App: 200 OK with User Profile
 ```
 
-#### Create Pickup Request
-- **Endpoint**: `POST /pickups`
-- **Request Body**:
-```json
-{
-  "pickupDate": "2026-09-23",
-  "pickupTime": "10:00 AM - 12:00 PM",
-  "address": "Flat 402, Green Valley Apts, Sector 62, Noida, UP",
-  "notes": "Gate code is #1234",
-  "items": [
-    {
-      "category": "Plastic",
-      "subCategory": "PET Bottles",
-      "estimatedWeight": 3.5,
-      "ratePerKg": 16.0,
-      "estimatedPrice": 56.0
-    }
-  ]
-}
-```
-- **Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "id": "PK-8291",
-    "citizenId": "mock-citizen-001",
-    "collectorId": "col-001",
-    "status": "matching",
-    "otpCode": "4829",
-    "items": [...],
-    "pickupDate": "2026-09-23",
-    "pickupTime": "10:00 AM - 12:00 PM"
-  }
-}
-```
+### Demo Accounts:
+- **Citizen**: Phone `9876512345` (Aarav Sharma) • Default OTP: `4829`
+- **Collector**: Phone `9876543210` (Ramesh Kumar) • Default OTP: `4829`
 
-#### Advance Pickup Status (Collector)
-- **Endpoint**: `PATCH /pickups/:id/status`
-- **Request Body**:
-```json
-{ "status": "arrived" }
-```
+---
 
-#### Verify Pickup with OTP & Actual Scale Weight (Doorstep Verification)
-- **Endpoint**: `POST /pickups/:id/verify`
-- **Request Body**:
-```json
-{
-  "otpCode": "4829",
-  "finalWeight": 4.2,
-  "finalAmount": 126.0
-}
-```
-- **Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "id": "PK-8291",
-    "status": "verified",
-    "finalWeight": 4.2,
-    "finalAmount": 126.0
-  }
-}
+## 6. API Client Usage
+
+The app uses a centralized `ApiClient` (`lib/core/network/api_client.dart`) that automatically injects the active Supabase JWT:
+
+```dart
+final client = ref.read(apiClientProvider);
+
+// GET request (Bearer token attached automatically)
+final rates = await client.get('/scrap/rates');
+
+// POST request
+final newPickup = await client.post('/pickups', body: {
+  'items': [...],
+  'scheduledDate': 'Today, 18 Sep',
+  'timeSlot': '11 AM - 1 PM',
+  'address': 'Sector 62, Noida',
+});
 ```
 
 ---
 
-### 3.4 Payments & Rewards Ledger
+## 7. Endpoint Mapping
 
-#### 1. Create Payment Order
-- **Endpoint**: `POST /payments/create`
-- **Request Body**:
-```json
-{ "pickupId": "PK-8291" }
-```
-- **Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "orderId": "order_mock_1727021400000",
-    "amount": 126.0,
-    "currency": "INR",
-    "pickupId": "PK-8291",
-    "key": "rzp_test_mock"
-  }
-}
-```
-
-#### 2. Verify Payment Order
-- **Endpoint**: `POST /payments/verify`
-- **Request Body**:
-```json
-{
-  "paymentId": "pay_mock_1727021400000",
-  "orderId": "order_mock_1727021400000",
-  "signature": "mock_sig_1727021400000",
-  "pickupId": "PK-8291"
-}
-```
-- **Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "paymentId": "pay_mock_1727021400000",
-    "orderId": "order_mock_1727021400000",
-    "status": "paid",
-    "pickupStatus": "completed",
-    "rewardsAwarded": {
-      "citizenPoints": 0,
-      "collectorCoins": 12
-    }
-  }
-}
-```
-
-> [!IMPORTANT]
-> **Citizen ₹500 Threshold Rule**:
-> As specified in Flutter's `RewardRules`, citizen Eco Points are awarded only when the final verified bill is ₹500 or higher (10% of bill).
-> For bills under ₹500, `citizenPoints` is `0`.
-> Collectors receive 10% Eco Coins on every completed transaction without any threshold!
+| Feature | HTTP Method & Endpoint | Frontend Repository / Service |
+|---|---|---|
+| **Login with Mobile** | `POST /api/v1/auth/login` | `HttpAuthRepository.loginWithPhone` |
+| **Verify OTP** | `POST /api/v1/auth/verify-otp` | `HttpAuthRepository.verifyOtp` |
+| **Select Role** | `POST /api/v1/auth/role` | `HttpAuthRepository.selectRole` |
+| **Fetch Current Profile** | `GET /api/v1/users/me` | `HttpAuthRepository.getCurrentUser` |
+| **Scrap Rates & Categories** | `GET /api/v1/scrap/rates` | `HttpScrapRepository.getCategoryPrices` |
+| **Popular Scrap Items** | `GET /api/v1/scrap/popular` | `HttpScrapRepository.getPopularItems` |
+| **AI Scrap Vision Analysis** | `POST /api/v1/scrap/analyze` | `HttpAiService.analyzeScrapImage` |
+| **Create Pickup Request** | `POST /api/v1/pickups` | `HttpPickupRepository.createPickupRequest` |
+| **List User Pickups** | `GET /api/v1/pickups` | `HttpPickupRepository.getCitizenPickups` |
+| **Advance Pickup Status** | `PATCH /api/v1/pickups/:id/status` | `HttpPickupRepository.updatePickupStatus` |
+| **Doorstep Scale & OTP Verify** | `POST /api/v1/pickups/:id/verify` | `HttpPickupRepository.verifyAndCompletePickup` |
+| **Create Payment Order** | `POST /api/v1/payments/create` | `HttpPaymentRepository.recordPayment` |
+| **Verify Payment Signature** | `POST /api/v1/payments/verify` | `HttpPaymentRepository.recordPayment` |
+| **Citizen Eco Points Ledger** | `GET /api/v1/rewards/points` | `HttpRewardsRepository.getCitizenPointHistory` |
+| **Collector Eco Coins Ledger** | `GET /api/v1/rewards/coins` | `HttpRewardsRepository.getCollectorCoinHistory` |
+| **Coupons Catalog** | `GET /api/v1/rewards/coupons` | `HttpRewardsRepository.getAvailableCoupons` |
+| **Recycling Journey Trace** | `GET /api/v1/recycling/pickup/:id` | `HttpRewardsRepository.getRecyclingJourneys` |
+| **Notifications** | `GET /api/v1/notifications` | `HttpNotificationService.getNotifications` |
 
 ---
 
-### 3.5 Recycling Journey & Impact
+## 8. Error Handling
 
-#### Track Recycling Stages
-- **Endpoint**: `GET /recycling/pickup/:pickupId`
-- **Response**:
-```json
-{
-  "success": true,
-  "data": {
-    "id": "RJ-9481",
-    "pickupId": "PK-9481",
-    "currentStage": "sorting",
-    "facilityName": "Green Earth Processing Hub, Greater Noida",
-    "stages": [
-      {
-        "stage": "collected",
-        "title": "Doorstep Collection",
-        "description": "Scrap picked up by verified collector Ramesh Kumar",
-        "timestamp": "Today, 10:15 AM",
-        "isCompleted": true
-      },
-      {
-        "stage": "sorting",
-        "title": "Facility Sorting",
-        "description": "Scrap segregated by grade at Green Earth Processing Hub",
-        "timestamp": "Today, 02:30 PM",
-        "isCompleted": true
-      },
-      {
-        "stage": "processing",
-        "title": "Industrial Shredding",
-        "description": "Cleaned and shredded into uniform PET flakes",
-        "timestamp": "Tomorrow, Expected",
-        "isCompleted": false
-      },
-      {
-        "stage": "recycled",
-        "title": "New Product Manufacturing",
-        "description": "Extruded into recycled polyester fiber for eco-apparel",
-        "timestamp": "Estimated 3 days",
-        "isCompleted": false
-      }
-    ]
-  }
-}
+Every API call unmarshals server errors via `ApiException`:
+- **401 Unauthorized**: Token expired or missing → prompts re-login.
+- **403 Forbidden**: Role violation (e.g. citizen trying to perform collector action).
+- **404 Not Found**: Resource not found.
+- **409 Conflict**: Invalid pickup state machine transition (e.g. attempting to jump backwards).
+- **Network Failure**: Handled with `ApiException.networkError()`, showing user-friendly offline toast rather than freezing.
+
+---
+
+## 9. Mock vs Live Mode Toggle
+
+The application preserves full mock fallbacks for offline development:
+- **Default**: `ApiConfig.useMock = false` (LIVE Mode)
+- **To enable Mock Mode at build time**:
+  ```bash
+  flutter run --dart-define=USE_MOCK=true
+  ```
+- **To enable Mock Mode at runtime**:
+  ```dart
+  ApiConfig.useMock = true;
+  ```
+
+---
+
+## 10. Verification & Testing
+
+### 1. Run Backend Offline Tests (25 tests):
+```bash
+cd backend
+npm test
 ```
+
+### 2. Run Backend Live Supabase Security Tests (18 tests):
+```bash
+cd backend
+npm run test:live
+```
+
+### 3. Run Flutter App:
+```bash
+cd frontend
+flutter run
+```
+
+---
+
+## 11. Security Audit Results
+
+A search of the entire Flutter codebase confirmed 0 occurrences of backend secrets:
+- `SUPABASE_SERVICE_ROLE_KEY`: **0 occurrences**
+- `service_role`: **0 occurrences**
+- `JWT_SECRET`: **0 occurrences**
+- `RAZORPAY_KEY_SECRET`: **0 occurrences**
+- `GEMINI_API_KEY`: **0 occurrences**
+- `GOOGLE_MAPS_API_KEY`: **0 occurrences**
+
+---
+
+## 12. Known Limitations & Next Steps
+
+1. **Third-Party Payment Gateway**:
+   - Razorpay integration is currently backed by `MockPaymentProvider` while awaiting commercial merchant credentials.
+2. **Third-Party Gemini API Key**:
+   - Scrap classification falls back gracefully to `MockAiProvider` when `GEMINI_API_KEY` is not provided in `.env`.
+3. **Realtime Subscriptions**:
+   - Currently, pickup status refreshes after user actions. Supabase Realtime WebSocket subscriptions can be added in a future phase.

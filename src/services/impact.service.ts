@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 
 export interface ImpactSummaryResponse {
   totalScrapCollectedKg: number;
@@ -16,7 +16,7 @@ export interface ImpactSummaryResponse {
 
 export class ImpactService {
   async getImpactSummary(): Promise<ImpactSummaryResponse> {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       return {

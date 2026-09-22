@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 import { inMemoryStore } from '../db/in-memory-store';
 
 export interface NotificationItemResponse {
@@ -13,7 +13,7 @@ export interface NotificationItemResponse {
 
 export class NotificationService {
   async getNotifications(userId: string): Promise<NotificationItemResponse[]> {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       const list = inMemoryStore.notifications.filter((n) => n.user_id === userId);
@@ -80,7 +80,7 @@ export class NotificationService {
   }
 
   async markAsRead(notificationId: string, userId: string): Promise<void> {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       const notif = inMemoryStore.notifications.find((n) => n.id === notificationId);

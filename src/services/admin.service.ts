@@ -1,12 +1,12 @@
 import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 import { inMemoryStore } from '../db/in-memory-store';
 import { NotFoundError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
 export class AdminService {
   async getDashboard() {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       const citizens = Array.from(inMemoryStore.profiles.values()).filter(
@@ -56,7 +56,7 @@ export class AdminService {
   }
 
   async getCitizens() {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       return Array.from(inMemoryStore.profiles.values())
@@ -86,7 +86,7 @@ export class AdminService {
   }
 
   async modifyCitizenCoins(citizenId: string, amount: number, action: 'add' | 'deduct') {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       const citizen = inMemoryStore.citizenProfiles.get(citizenId) || {
@@ -132,7 +132,7 @@ export class AdminService {
   }
 
   async getCollectors() {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       return Array.from(inMemoryStore.collectorProfiles.entries()).map(([id, col]) => ({
@@ -156,7 +156,7 @@ export class AdminService {
   }
 
   async toggleCollectorStatus(collectorId: string) {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       const col = inMemoryStore.collectorProfiles.get(collectorId);
@@ -183,7 +183,7 @@ export class AdminService {
   }
 
   async reassignPickup(pickupId: string, collectorId: string, actorId: string) {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       const p = inMemoryStore.pickups.get(pickupId);
@@ -211,7 +211,7 @@ export class AdminService {
   }
 
   async getAuditLogs() {
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       return [

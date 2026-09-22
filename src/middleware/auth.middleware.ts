@@ -4,6 +4,7 @@ import { getAuthenticatedSupabaseClient, supabaseAdmin } from '../config/supabas
 import { UnauthorizedError } from '../utils/errors';
 import { AppRole } from '../config/constants';
 import { logger } from '../utils/logger';
+import { isMockStore } from '../config/env';
 
 export interface AuthenticatedUser {
   id: string;
@@ -58,8 +59,8 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     const token = authHeader.split(' ')[1];
     req.token = token;
 
-    // 1. Check for mock/demo tokens (for testing & offline development)
-    if (MOCK_USERS[token]) {
+    // 1. Check for mock/demo tokens ONLY in mock/test mode
+    if (isMockStore() && MOCK_USERS[token]) {
       req.user = MOCK_USERS[token];
       req.supabase = getAuthenticatedSupabaseClient(token);
       return next();

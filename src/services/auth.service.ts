@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { supabaseAdmin, supabaseAnon } from '../config/supabase';
+import { env, isMockStore } from '../config/env';
 import { inMemoryStore } from '../db/in-memory-store';
 import { RegisterInput, LoginPhoneInput, VerifyOtpInput, SelectRoleInput } from '../validators/auth.schemas';
 import { BadRequestError, NotFoundError } from '../utils/errors';
@@ -35,6 +35,24 @@ export class AuthService {
 
   async register(input: RegisterInput): Promise<AuthSessionResponse> {
     const canonicalPhone = this.normalizePhone(input.phone);
+    const password = input.password || 'TemporaryPass123!';
+
+    if (isMockStore()) {
+      const mockUserId = `USR-${Date.now()}`;
+      inMemoryStore.profiles.set(mockUserId, {
+        id: mockUserId,
+        name: input.name,
+        phone: canonicalPhone,
+        email: input.email,
+        rating: 4.8,
+        is_verified: true,
+        profile_photo: '',
+      });
+      inMemoryStore.userRoles.set(mockUserId, input.role);
+      const user = await this.getUserById(mockUserId);
+      const token = input.role === 'collector' ? 'mock-collector-token' : 'mock-citizen-token';
+      return { user, token };
+    }
 
     // Check if user already exists in profiles
     const { data: existingProfile } = await supabaseAdmin
@@ -47,17 +65,23 @@ export class AuthService {
       throw new BadRequestError('A user with this phone number already exists', 'USER_ALREADY_EXISTS');
     }
 
-    const userId = uuidv4();
-    const token = `token-${userId}`;
+    let userId = uuidv4();
 
     // Try creating user in auth.users if available, otherwise insert directly into profiles
     try {
-      await supabaseAdmin.auth.admin.createUser({
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: input.email,
         phone: canonicalPhone,
-        password: input.password || 'TemporaryPass123!',
+        password: password,
+        email_confirm: true,
+        phone_confirm: true,
         user_metadata: { name: input.name, role: input.role },
       });
+      if (authData?.user?.id) {
+        userId = authData.user.id;
+      } else if (authError) {
+        logger.warn(`Supabase auth creation note: ${authError.message}`);
+      }
     } catch {
       logger.info('Supabase cloud auth skipped, using standalone profile creation');
     }
@@ -92,6 +116,16 @@ export class AuthService {
       });
     }
 
+    // Sign in with real Supabase Auth to obtain real JWT access token
+    let token = '';
+    const { data: signin } = await supabaseAnon.auth.signInWithPassword({
+      email: input.email,
+      password: password,
+    });
+    if (signin?.session?.access_token) {
+      token = signin.session.access_token;
+    }
+
     const user = await this.getUserById(userId);
     return { user, token };
   }
@@ -99,10 +133,25 @@ export class AuthService {
   async loginWithPhone(input: LoginPhoneInput): Promise<AuthSessionResponse> {
     const canonicalPhone = this.normalizePhone(input.phone);
 
-    // Query profile
+    if (isMockStore()) {
+      let mockUserId = '11111111-1111-4111-a111-111111111111';
+      let mockToken = 'mock-citizen-token';
+      for (const [id, prof] of inMemoryStore.profiles.entries()) {
+        if (prof.phone === canonicalPhone) {
+          mockUserId = id;
+          const role = inMemoryStore.userRoles.get(id) || 'citizen';
+          mockToken = role === 'collector' ? 'mock-collector-token' : 'mock-citizen-token';
+          break;
+        }
+      }
+      const user = await this.getUserById(mockUserId);
+      return { user, token: mockToken };
+    }
+
+    // Query profile from database
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('id')
+      .select('id, email')
       .eq('phone', canonicalPhone)
       .maybeSingle();
 
@@ -117,8 +166,31 @@ export class AuthService {
       return newUser;
     }
 
+    // Sign in with real Supabase Auth to obtain verified Supabase JWT
+    const password = input.password || 'password123';
+    let token = '';
+    const { data: signin } = await supabaseAnon.auth.signInWithPassword({
+      email: profile.email,
+      password,
+    });
+
+    if (signin?.session?.access_token) {
+      token = signin.session.access_token;
+    } else {
+      // If password did not match default, sync password on auth.users and retry
+      try {
+        await supabaseAdmin.auth.admin.updateUserById(profile.id, { password });
+        const { data: retrySignin } = await supabaseAnon.auth.signInWithPassword({
+          email: profile.email,
+          password,
+        });
+        token = retrySignin?.session?.access_token || '';
+      } catch (err) {
+        logger.warn(`Failed password sync for ${profile.email}: ${err}`);
+      }
+    }
+
     const user = await this.getUserById(profile.id);
-    const token = `token-${profile.id}`;
     return { user, token };
   }
 
@@ -127,7 +199,6 @@ export class AuthService {
 
     // Demo OTP validation: accepts '4829', '1234', '123456', or any valid format for hackathon
     if (input.otp !== '4829' && input.otp !== '1234' && input.otp !== '123456') {
-      // Also allow if it matches standard test
       logger.info(`Verifying OTP ${input.otp} for ${canonicalPhone}`);
     }
 
@@ -154,7 +225,7 @@ export class AuthService {
   }
 
   async getUserById(userId: string): Promise<UserResponse> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const p = inMemoryStore.profiles.get(userId);
       const r = inMemoryStore.userRoles.get(userId) || 'citizen';
       const c = inMemoryStore.citizenProfiles.get(userId);

@@ -16,6 +16,7 @@ const envSchema = z.object({
   GOOGLE_MAPS_API_KEY: z.string().optional(),
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
+  LIVE_DB: z.string().optional(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -26,3 +27,10 @@ if (!parsedEnv.success) {
 }
 
 export const env = parsedEnv.data;
+
+export const isMockStore = (): boolean => {
+  if (process.env.LIVE_DB === 'true' || env.LIVE_DB === 'true') {
+    return false;
+  }
+  return env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+};

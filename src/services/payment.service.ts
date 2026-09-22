@@ -1,7 +1,7 @@
 import { PaymentProvider } from '../integrations/payments/payment.interface';
 import { MockPaymentProvider } from '../integrations/payments/providers/mock-payment.provider';
 import { RazorpayProvider } from '../integrations/payments/providers/razorpay.provider';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 import { supabaseAdmin } from '../config/supabase';
 import { inMemoryStore } from '../db/in-memory-store';
 import { pickupService } from './pickup.service';
@@ -70,7 +70,7 @@ export class PaymentService {
     const pickup = await pickupService.getPickupById(params.pickupId);
     const authoritativeAmount = pickup.finalVerifiedPrice > 0 ? pickup.finalVerifiedPrice : pickup.totalEstimatedPrice;
 
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     // 1. Idempotency Check
     if (isMock) {
@@ -160,7 +160,7 @@ export class PaymentService {
   }
 
   async getPaymentHistory(userId: string): Promise<PaymentModelResponse[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const records = Array.from(inMemoryStore.payments.values());
       if (records.length === 0) {
         return [

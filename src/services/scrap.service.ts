@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 import { aiService } from '../integrations/ai/ai.service';
 import { AnalyzeScrapInput } from '../validators/scrap.schemas';
 import { ScrapAnalysisItem } from '../integrations/ai/ai.interface';
@@ -13,7 +13,7 @@ export interface CategoryPriceInfo {
 
 export class ScrapService {
   async getCategoryPrices(): Promise<CategoryPriceInfo[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       return [
         {
           category: 'Plastic',

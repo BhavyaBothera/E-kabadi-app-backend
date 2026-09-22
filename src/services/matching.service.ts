@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 import { calculateHaversineDistanceKm, formatDistanceString } from '../utils/geo';
 import { APP_CONSTANTS } from '../config/constants';
 import { logger } from '../utils/logger';
@@ -36,7 +36,7 @@ export class MatchingService {
     pickupLon: number,
     maxRadiusKm = 10,
   ): Promise<MatchingCandidate[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       return [
         {
           collectorId: '22222222-2222-4222-a222-222222222222',

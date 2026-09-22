@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 import { inMemoryStore } from '../db/in-memory-store';
 import {
   CreatePickupInput,
@@ -108,7 +108,7 @@ export class PickupService {
     }
 
     // 3. Database / In-Memory Insertion
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       inMemoryStore.pickups.set(pickupId, {
         id: pickupId,
         citizen_id: citizenId,
@@ -191,7 +191,7 @@ export class PickupService {
   }
 
   async getPickupById(pickupId: string): Promise<PickupRequestResponse> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const inMem = inMemoryStore.pickups.get(pickupId);
       if (!inMem) {
         throw new NotFoundError(`Pickup ${pickupId} not found`, 'PICKUP_NOT_FOUND');
@@ -297,7 +297,7 @@ export class PickupService {
   }
 
   async getCitizenPickups(citizenId: string): Promise<PickupRequestResponse[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const matching = Array.from(inMemoryStore.pickups.values()).filter(
         (p) => p.citizen_id === citizenId,
       );
@@ -325,7 +325,7 @@ export class PickupService {
   }
 
   async getCollectorPickups(collectorId: string): Promise<PickupRequestResponse[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const matching = Array.from(inMemoryStore.pickups.values()).filter(
         (p) => p.collector_id === collectorId || ['pending', 'matching'].includes(p.status),
       );
@@ -365,7 +365,7 @@ export class PickupService {
     }
 
     // 2. Perform Update in Database or In-Memory
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const inMem = inMemoryStore.pickups.get(pickupId);
       if (inMem) {
         inMem.status = input.status;
@@ -412,7 +412,7 @@ export class PickupService {
       throw new BadRequestError('Invalid OTP code. Please check with the citizen.', 'INVALID_OTP');
     }
 
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const inMem = inMemoryStore.pickups.get(pickupId);
       if (inMem) {
         inMem.status = 'verified';

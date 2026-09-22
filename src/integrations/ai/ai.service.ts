@@ -1,7 +1,7 @@
 import { AiProvider, ScrapAnalysisResult } from './ai.interface';
 import { MockAiProvider } from './providers/mock-ai.provider';
 import { GeminiProvider } from './providers/gemini.provider';
-import { env } from '../../config/env';
+import { env, isMockStore } from '../../config/env';
 import { supabaseAdmin } from '../../config/supabase';
 import { logger } from '../../utils/logger';
 
@@ -23,7 +23,7 @@ export class AiService {
 
     // Enrich items with live authoritative rates from rate_cards
     let rates: Array<{ sub_type: string; current_rate: string }> = [];
-    if (!env.SUPABASE_URL.includes('mock-project.supabase.co') && env.NODE_ENV !== 'test') {
+    if (!isMockStore()) {
       const { data } = await supabaseAdmin
         .from('rate_cards')
         .select('sub_type, current_rate')

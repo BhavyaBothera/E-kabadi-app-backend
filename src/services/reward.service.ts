@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../config/supabase';
-import { env } from '../config/env';
+import { env, isMockStore } from '../config/env';
 import { inMemoryStore } from '../db/in-memory-store';
 import { APP_CONSTANTS } from '../config/constants';
 import { BadRequestError, NotFoundError } from '../utils/errors';
@@ -65,7 +65,7 @@ export class RewardService {
     const citizenPoints = this.calculateCitizenEcoPoints(finalAmount);
     const collectorCoins = this.calculateCollectorEcoCoins(finalAmount);
 
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     // 1. Citizen Points Ledger Entry
     if (citizenPoints > 0) {
@@ -174,7 +174,7 @@ export class RewardService {
   }
 
   async getCitizenPointHistory(citizenId: string): Promise<EcoPointHistoryItem[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       const txs = inMemoryStore.rewardTransactions.filter(
         (t) => t.user_id === citizenId || t.role === 'citizen',
       );
@@ -234,7 +234,7 @@ export class RewardService {
   }
 
   async getCollectorCoinHistory(collectorId: string): Promise<EcoCoinHistoryItem[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       return [
         {
           id: 'CN-201',
@@ -285,7 +285,7 @@ export class RewardService {
   }
 
   async getRewardCatalog(): Promise<RewardCouponItem[]> {
-    if (env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test') {
+    if (isMockStore()) {
       return inMemoryStore.rewardCatalog.map((c) => ({
         id: c.id,
         title: c.title,
@@ -320,7 +320,7 @@ export class RewardService {
       throw new NotFoundError('Reward coupon not found', 'COUPON_NOT_FOUND');
     }
 
-    const isMock = env.SUPABASE_URL.includes('mock-project.supabase.co') || env.NODE_ENV === 'test';
+    const isMock = isMockStore();
 
     if (isMock) {
       const citizen = inMemoryStore.citizenProfiles.get(userId);
