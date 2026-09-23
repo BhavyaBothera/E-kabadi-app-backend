@@ -1,10 +1,14 @@
 import app from './app';
 import { env } from './config/env';
 import { logger } from './utils/logger';
+import { storageService } from './services/storage.service';
 
-const server = app.listen(env.PORT, () => {
-  logger.info(`♻️ E-Kabadi Backend running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+const server = app.listen(env.PORT, '0.0.0.0', async () => {
+  logger.info(`♻️ E-Kabadi Backend running on 0.0.0.0:${env.PORT} in ${env.NODE_ENV} mode`);
   logger.info(`Health check available at: http://localhost:${env.PORT}/api/v1/health`);
+
+  // Ensure Supabase Storage bucket is provisioned
+  await storageService.ensureBucket();
 });
 
 const gracefulShutdown = (signal: string) => {

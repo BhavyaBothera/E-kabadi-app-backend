@@ -5,6 +5,8 @@ import { env, isMockStore } from '../../config/env';
 import { supabaseAdmin } from '../../config/supabase';
 import { logger } from '../../utils/logger';
 
+import { storageService, StorageUploadResult } from '../../services/storage.service';
+
 export class AiService {
   private provider: AiProvider;
 
@@ -19,9 +21,21 @@ export class AiService {
   }
 
   async analyzeScrapImage(imageData: string, userId?: string, isFromCamera = false): Promise<ScrapAnalysisResult> {
+    // 1. Upload scrap image to Supabase Storage
+    let storageResult: StorageUploadResult | undefined;
+    if (imageData && (imageData.startsWith('data:image') || imageData.length > 100)) {
+      try {
+        storageResult = await storageService.uploadScrapImage(imageData, userId || 'anonymous');
+        logger.info(`[AiService] Image uploaded to Supabase Storage: ${storageResult.storagePath}`);
+      } catch (uploadErr) {
+        logger.warn('[AiService] Supabase Storage upload warning:', uploadErr);
+      }
+    }
+
+    // 2. Perform AI vision scrap material detection
     const rawResult = await this.provider.analyzeScrapImage(imageData);
 
-    // Enrich items with live authoritative rates from rate_cards
+    // 3. Enrich items with live authoritative rates from rate_cards
     let rates: Array<{ sub_type: string; current_rate: string }> = [];
     if (!isMockStore()) {
       const { data } = await supabaseAdmin
@@ -45,11 +59,12 @@ export class AiService {
       };
     });
 
-    // Save analysis record in database if userId is provided
+    // 4. Save analysis record in database if userId is provided (storing storage reference)
     if (userId) {
       try {
         await supabaseAdmin.from('scrap_analyses').insert({
           user_id: userId,
+          image_url: storageResult?.storagePath || null, // Store storage reference in PostgreSQL
           is_from_camera: isFromCamera,
           detected_items: enrichedItems,
           raw_provider_response: rawResult.rawProviderResponse,
@@ -64,6 +79,8 @@ export class AiService {
     return {
       items: enrichedItems,
       warnings: rawResult.warnings,
+      imageUrl: storageResult?.signedUrl,
+      storagePath: storageResult?.storagePath,
     };
   }
 }

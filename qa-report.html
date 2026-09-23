@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Kabadi QA Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f1117;
+      color: #e4e4e7;
+      padding: 2rem;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge.pass { background: #065f46; color: #6ee7b7; }
+    .badge.fail { background: #7f1d1d; color: #fca5a5; }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .meta-card {
+      background: #1a1b23;
+      border: 1px solid #27272a;
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+    }
+    .meta-card .label { color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .meta-card .value { font-size: 1.25rem; font-weight: 700; color: #fff; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat {
+      background: #1a1b23;
+      border: 1px solid #27272a;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .stat .num { font-size: 2rem; font-weight: 800; }
+    .stat .lbl { font-size: 0.75rem; color: #71717a; text-transform: uppercase; margin-top: 0.25rem; }
+    .stat.total .num { color: #818cf8; }
+    .stat.passed .num { color: #6ee7b7; }
+    .stat.failed .num { color: #fca5a5; }
+    .stat.skipped .num { color: #fbbf24; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #27272a;
+    }
+    th { color: #71717a; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; background: #1a1b23; }
+    tr:hover { background: #1e1f29; }
+    .status-pass { color: #6ee7b7; font-weight: 600; }
+    .status-fail { color: #fca5a5; font-weight: 600; }
+    .status-skip { color: #fbbf24; font-weight: 600; }
+    .error-panel {
+      background: #1c1015;
+      border: 1px solid #7f1d1d;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #fca5a5;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .suite-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #818cf8;
+      padding: 1rem 0 0.5rem;
+      border-bottom: 2px solid #27272a;
+      margin-top: 1rem;
+    }
+    .footer {
+      text-align: center;
+      color: #52525b;
+      font-size: 0.75rem;
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid #27272a;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🧪 E-Kabadi QA Report</h1>
+    <span class="badge pass">
+      ✅ ALL PASSED
+    </span>
+  </div>
+
+  <div class="meta">
+    <div class="meta-card">
+      <div class="label">Generated</div>
+      <div class="value">2026-09-23 10:02:30</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Node Version</div>
+      <div class="value">v24.11.1</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Total Duration</div>
+      <div class="value">146.6s</div>
+    </div>
+    <div class="meta-card">
+      <div class="label">Test Suites</div>
+      <div class="value">56</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat total">
+      <div class="num">153</div>
+      <div class="lbl">Total Tests</div>
+    </div>
+    <div class="stat passed">
+      <div class="num">153</div>
+      <div class="lbl">Passed</div>
+    </div>
+    <div class="stat failed">
+      <div class="num">0</div>
+      <div class="lbl">Failed</div>
+    </div>
+    <div class="stat skipped">
+      <div class="num">0</div>
+      <div class="lbl">Skipped</div>
+    </div>
+  </div>
+
+  <h2 style="color:#fff;margin-bottom:1rem;">Suite Breakdown</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Suite</th>
+        <th>Status</th>
+        <th>Tests</th>
+        <th>Duration</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+            <td>admin.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>8/8</td>
+            <td>0.1s</td>
+          </tr>
+<tr>
+            <td>api-contract.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>37/37</td>
+            <td>0.2s</td>
+          </tr>
+<tr>
+            <td>auth-edge-cases.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>15/15</td>
+            <td>0.9s</td>
+          </tr>
+<tr>
+            <td>citizen-collector-profiles.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>21/21</td>
+            <td>2.9s</td>
+          </tr>
+<tr>
+            <td>notifications-impact.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>17/17</td>
+            <td>0.1s</td>
+          </tr>
+<tr>
+            <td>payments-rewards.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>6/6</td>
+            <td>0.1s</td>
+          </tr>
+<tr>
+            <td>pickup-flow.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>7/7</td>
+            <td>0.6s</td>
+          </tr>
+<tr>
+            <td>concurrency-live.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>4/4</td>
+            <td>44.2s</td>
+          </tr>
+<tr>
+            <td>integrations-live.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>5/5</td>
+            <td>28.2s</td>
+          </tr>
+<tr>
+            <td>runtime-qa-golden-path.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>11/11</td>
+            <td>41.5s</td>
+          </tr>
+<tr>
+            <td>supabase-live.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>18/18</td>
+            <td>27.9s</td>
+          </tr>
+<tr>
+            <td>reward-rules.test.ts</td>
+            <td class="status-pass">PASSED</td>
+            <td>4/4</td>
+            <td>0.0s</td>
+          </tr>
+    </tbody>
+  </table>
+
+  <h2 style="color:#fff;margin-bottom:1rem;">Individual Test Results</h2>
+  
+      <div class="suite-header">admin.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>1. Rejects unauthenticated request with 401 Unauthorized</td>
+              <td class="status-pass">PASSED</td>
+              <td>26.8904ms</td>
+            </tr>
+<tr>
+              <td>2. Rejects citizen token with 403 Forbidden</td>
+              <td class="status-pass">PASSED</td>
+              <td>6.617999999999938ms</td>
+            </tr>
+<tr>
+              <td>3. Rejects collector token with 403 Forbidden</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.385099999999966ms</td>
+            </tr>
+<tr>
+              <td>4. Admin retrieves dashboard overview metrics</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.574500000000171ms</td>
+            </tr>
+<tr>
+              <td>5. Admin fetches list of citizens and modifies coins</td>
+              <td class="status-pass">PASSED</td>
+              <td>20.543600000000197ms</td>
+            </tr>
+<tr>
+              <td>6. Admin fetches collectors and toggles collector active status</td>
+              <td class="status-pass">PASSED</td>
+              <td>9.112900000000081ms</td>
+            </tr>
+<tr>
+              <td>7. Admin reassigns pickup collector</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.095900000000029ms</td>
+            </tr>
+<tr>
+              <td>8. Admin views system audit logs</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.4542999999998756ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">api-contract.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>rejects empty body with 422</td>
+              <td class="status-pass">PASSED</td>
+              <td>39.53730000000019ms</td>
+            </tr>
+<tr>
+              <td>rejects missing name</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.420700000000124ms</td>
+            </tr>
+<tr>
+              <td>rejects invalid phone format</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.826999999999998ms</td>
+            </tr>
+<tr>
+              <td>rejects invalid email format</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.7854999999999563ms</td>
+            </tr>
+<tr>
+              <td>rejects name shorter than 2 characters</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.597200000000157ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body with validation error</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.457499999999982ms</td>
+            </tr>
+<tr>
+              <td>rejects phone with letters</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.6205999999999676ms</td>
+            </tr>
+<tr>
+              <td>rejects phone with too few digits</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.863299999999981ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.9101000000000568ms</td>
+            </tr>
+<tr>
+              <td>rejects missing OTP</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.689399999999978ms</td>
+            </tr>
+<tr>
+              <td>rejects OTP longer than 6 digits</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.4957999999999174ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.362099999999828ms</td>
+            </tr>
+<tr>
+              <td>rejects missing items array</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.9023999999999432ms</td>
+            </tr>
+<tr>
+              <td>rejects empty items array</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.9023999999999432ms</td>
+            </tr>
+<tr>
+              <td>rejects item with negative weight</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.7572999999999865ms</td>
+            </tr>
+<tr>
+              <td>rejects item with missing category</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.6797999999998865ms</td>
+            </tr>
+<tr>
+              <td>rejects missing scheduledDate</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.30639999999994ms</td>
+            </tr>
+<tr>
+              <td>rejects address shorter than 5 characters</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.598700000000008ms</td>
+            </tr>
+<tr>
+              <td>rejects invalid status value</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.1708000000000993ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.544499999999971ms</td>
+            </tr>
+<tr>
+              <td>rejects missing otpCode</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.180700000000115ms</td>
+            </tr>
+<tr>
+              <td>rejects zero finalWeight</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.4219000000000506ms</td>
+            </tr>
+<tr>
+              <td>rejects negative finalAmount</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.345800000000054ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.914600000000064ms</td>
+            </tr>
+<tr>
+              <td>rejects missing pickupId</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.948599999999942ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.1028000000001157ms</td>
+            </tr>
+<tr>
+              <td>rejects missing orderId</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.6177999999999884ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.680699999999888ms</td>
+            </tr>
+<tr>
+              <td>rejects missing image field</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.4026000000001204ms</td>
+            </tr>
+<tr>
+              <td>rejects empty image string</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.7690000000000055ms</td>
+            </tr>
+<tr>
+              <td>rejects empty body</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.989900000000034ms</td>
+            </tr>
+<tr>
+              <td>rejects missing catalogId</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.6424999999999272ms</td>
+            </tr>
+<tr>
+              <td>rejects latitude out of range</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.4923999999998614ms</td>
+            </tr>
+<tr>
+              <td>rejects longitude out of range</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.023200000000088ms</td>
+            </tr>
+<tr>
+              <td>returns 404 for unknown route</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.8548000000000684ms</td>
+            </tr>
+<tr>
+              <td>returns structured error body on 404</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.98050000000012ms</td>
+            </tr>
+<tr>
+              <td>rejects malformed JSON with error status</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.821700000000192ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">auth-edge-cases.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>rejects registration with phone starting with invalid digit (0-5)</td>
+              <td class="status-pass">PASSED</td>
+              <td>40.219499999999925ms</td>
+            </tr>
+<tr>
+              <td>accepts valid Indian mobile number with +91 prefix (passes validation)</td>
+              <td class="status-pass">PASSED</td>
+              <td>6.432199999999966ms</td>
+            </tr>
+<tr>
+              <td>accepts valid Indian mobile number without +91 prefix</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.523799999999937ms</td>
+            </tr>
+<tr>
+              <td>rejects invalid role value</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.081200000000081ms</td>
+            </tr>
+<tr>
+              <td>handles login for non-existent user without crashing</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.8028999999999087ms</td>
+            </tr>
+<tr>
+              <td>rejects login with very long phone string (fails validation)</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.8362999999999374ms</td>
+            </tr>
+<tr>
+              <td>rejects request with empty Authorization header</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.827600000000075ms</td>
+            </tr>
+<tr>
+              <td>rejects request with Bearer but no token</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.033100000000104ms</td>
+            </tr>
+<tr>
+              <td>rejects request with non-Bearer auth scheme</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.477399999999989ms</td>
+            </tr>
+<tr>
+              <td>rejects request with malformed JWT string</td>
+              <td class="status-pass">PASSED</td>
+              <td>664.1363000000001ms</td>
+            </tr>
+<tr>
+              <td>rejects request with extremely long token</td>
+              <td class="status-pass">PASSED</td>
+              <td>142.70290000000023ms</td>
+            </tr>
+<tr>
+              <td>rejects role selection without auth</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.394800000000032ms</td>
+            </tr>
+<tr>
+              <td>rejects invalid role value</td>
+              <td class="status-pass">PASSED</td>
+              <td>7.244000000000142ms</td>
+            </tr>
+<tr>
+              <td>rejects OTP shorter than 4 digits</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.329699999999775ms</td>
+            </tr>
+<tr>
+              <td>handles OTP for non-existent phone without crashing</td>
+              <td class="status-pass">PASSED</td>
+              <td>7.214999999999691ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">citizen-collector-profiles.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>GET /citizens/dashboard returns dashboard data for authenticated citizen</td>
+              <td class="status-pass">PASSED</td>
+              <td>912.086ms</td>
+            </tr>
+<tr>
+              <td>GET /citizens/dashboard rejects unauthenticated request</td>
+              <td class="status-pass">PASSED</td>
+              <td>12.01260000000002ms</td>
+            </tr>
+<tr>
+              <td>GET /citizens/dashboard rejects collector token (role isolation)</td>
+              <td class="status-pass">PASSED</td>
+              <td>6.133199999999761ms</td>
+            </tr>
+<tr>
+              <td>PATCH /citizens/profile updates citizen name</td>
+              <td class="status-pass">PASSED</td>
+              <td>182.29029999999966ms</td>
+            </tr>
+<tr>
+              <td>PATCH /citizens/profile rejects name &lt; 2 chars</td>
+              <td class="status-pass">PASSED</td>
+              <td>11.159499999999753ms</td>
+            </tr>
+<tr>
+              <td>PATCH /citizens/profile rejects invalid email</td>
+              <td class="status-pass">PASSED</td>
+              <td>10.143199999999979ms</td>
+            </tr>
+<tr>
+              <td>GET /citizens/addresses returns addresses list</td>
+              <td class="status-pass">PASSED</td>
+              <td>512.6262000000002ms</td>
+            </tr>
+<tr>
+              <td>POST /citizens/addresses rejects short address</td>
+              <td class="status-pass">PASSED</td>
+              <td>6.65119999999979ms</td>
+            </tr>
+<tr>
+              <td>POST /citizens/addresses creates a new address</td>
+              <td class="status-pass">PASSED</td>
+              <td>102.55390000000034ms</td>
+            </tr>
+<tr>
+              <td>PATCH /collectors/status updates collector availability</td>
+              <td class="status-pass">PASSED</td>
+              <td>400.7745ms</td>
+            </tr>
+<tr>
+              <td>PATCH /collectors/status rejects citizen token (role isolation)</td>
+              <td class="status-pass">PASSED</td>
+              <td>13.864399999999932ms</td>
+            </tr>
+<tr>
+              <td>PATCH /collectors/status rejects invalid status enum</td>
+              <td class="status-pass">PASSED</td>
+              <td>10.233300000000327ms</td>
+            </tr>
+<tr>
+              <td>PATCH /collectors/location updates GPS coordinates</td>
+              <td class="status-pass">PASSED</td>
+              <td>104.77739999999994ms</td>
+            </tr>
+<tr>
+              <td>PATCH /collectors/location rejects citizen token</td>
+              <td class="status-pass">PASSED</td>
+              <td>9.594500000000153ms</td>
+            </tr>
+<tr>
+              <td>GET /collectors/earnings returns earnings for collector</td>
+              <td class="status-pass">PASSED</td>
+              <td>402.82519999999977ms</td>
+            </tr>
+<tr>
+              <td>GET /collectors/earnings rejects citizen token</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.722999999999956ms</td>
+            </tr>
+<tr>
+              <td>GET /collectors/nearby returns nearby collectors (public)</td>
+              <td class="status-pass">PASSED</td>
+              <td>117.83759999999984ms</td>
+            </tr>
+<tr>
+              <td>collector cannot access citizen dashboard</td>
+              <td class="status-pass">PASSED</td>
+              <td>8.926499999999578ms</td>
+            </tr>
+<tr>
+              <td>citizen cannot update collector status</td>
+              <td class="status-pass">PASSED</td>
+              <td>9.82629999999972ms</td>
+            </tr>
+<tr>
+              <td>citizen cannot update collector location</td>
+              <td class="status-pass">PASSED</td>
+              <td>13.925400000000081ms</td>
+            </tr>
+<tr>
+              <td>citizen cannot view collector earnings</td>
+              <td class="status-pass">PASSED</td>
+              <td>11.848100000000159ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">notifications-impact.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>returns notifications for authenticated citizen</td>
+              <td class="status-pass">PASSED</td>
+              <td>26.549800000000005ms</td>
+            </tr>
+<tr>
+              <td>returns notifications for authenticated collector</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.033199999999852ms</td>
+            </tr>
+<tr>
+              <td>rejects unauthenticated request with 401</td>
+              <td class="status-pass">PASSED</td>
+              <td>7.013599999999997ms</td>
+            </tr>
+<tr>
+              <td>handles marking non-existent notification gracefully</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.02170000000001ms</td>
+            </tr>
+<tr>
+              <td>rejects unauthenticated mark-as-read</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.070199999999886ms</td>
+            </tr>
+<tr>
+              <td>returns impact summary (public endpoint)</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.176099999999906ms</td>
+            </tr>
+<tr>
+              <td>impact summary contains expected environmental fields</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.330699999999979ms</td>
+            </tr>
+<tr>
+              <td>GET /rewards/points returns citizen eco points</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.970800000000054ms</td>
+            </tr>
+<tr>
+              <td>GET /rewards/coins returns collector eco coins</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.709100000000035ms</td>
+            </tr>
+<tr>
+              <td>GET /rewards/coupons returns coupon catalog</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.506600000000162ms</td>
+            </tr>
+<tr>
+              <td>rejects unauthenticated rewards request</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.4809000000000196ms</td>
+            </tr>
+<tr>
+              <td>returns scrap rate catalog</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.548999999999978ms</td>
+            </tr>
+<tr>
+              <td>returns 200 with ok status</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.5004999999998745ms</td>
+            </tr>
+<tr>
+              <td>health check is accessible without auth</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.6134000000001834ms</td>
+            </tr>
+<tr>
+              <td>rejects unauthenticated image request</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.301200000000108ms</td>
+            </tr>
+<tr>
+              <td>returns current user profile for citizen</td>
+              <td class="status-pass">PASSED</td>
+              <td>3.636799999999994ms</td>
+            </tr>
+<tr>
+              <td>returns current user profile for collector</td>
+              <td class="status-pass">PASSED</td>
+              <td>2.7141999999998916ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">payments-rewards.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>1. Prepares PK-9481 by advancing status to arrived and verified</td>
+              <td class="status-pass">PASSED</td>
+              <td>45.58100000000013ms</td>
+            </tr>
+<tr>
+              <td>2. Citizen creates payment order for verified pickup</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.783300000000054ms</td>
+            </tr>
+<tr>
+              <td>3. Payment verification enforces the ₹500 rule: ₹118 bill yields 0 citizen Eco Points</td>
+              <td class="status-pass">PASSED</td>
+              <td>21.319500000000062ms</td>
+            </tr>
+<tr>
+              <td>4. Payment verification enforces collector rule: 10% earned on EVERY transaction (no ₹500 threshold)</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.994899999999916ms</td>
+            </tr>
+<tr>
+              <td>5. Payment on a ₹850 verified pickup awards 10% (85 points) to citizen</td>
+              <td class="status-pass">PASSED</td>
+              <td>21.44179999999983ms</td>
+            </tr>
+<tr>
+              <td>6. Retrieves reward coupons catalog and redeems coupon</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.956400000000031ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">pickup-flow.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>1. Verifies system health and readiness</td>
+              <td class="status-pass">PASSED</td>
+              <td>24.81840000000011ms</td>
+            </tr>
+<tr>
+              <td>2. Citizen discovers scrap rates and analyzes scrap image via AI</td>
+              <td class="status-pass">PASSED</td>
+              <td>532.4314000000002ms</td>
+            </tr>
+<tr>
+              <td>3. Citizen creates a pickup request and auto-matches an available collector</td>
+              <td class="status-pass">PASSED</td>
+              <td>9.3753999999999ms</td>
+            </tr>
+<tr>
+              <td>4. Collector accepts and starts journey towards citizen (status: onTheWay)</td>
+              <td class="status-pass">PASSED</td>
+              <td>7.435899999999947ms</td>
+            </tr>
+<tr>
+              <td>5. Collector arrives at citizen location (status: arrived)</td>
+              <td class="status-pass">PASSED</td>
+              <td>7.536299999999983ms</td>
+            </tr>
+<tr>
+              <td>6. Collector verifies scrap with citizen OTP, weighing scale and authoritative pricing</td>
+              <td class="status-pass">PASSED</td>
+              <td>5.384900000000016ms</td>
+            </tr>
+<tr>
+              <td>7. State Machine Defense: Rejects illegal backward transition (verified -&gt; pending)</td>
+              <td class="status-pass">PASSED</td>
+              <td>6.6875ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">concurrency-live.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>1. Race: Only one of two simultaneous accepts succeeds for same pickup</td>
+              <td class="status-pass">PASSED</td>
+              <td>5469.2098000000005ms</td>
+            </tr>
+<tr>
+              <td>2. Double-verify of same pickup does not corrupt data</td>
+              <td class="status-pass">PASSED</td>
+              <td>14414.6524ms</td>
+            </tr>
+<tr>
+              <td>3. Double-payment for same pickup does not create duplicate records</td>
+              <td class="status-pass">PASSED</td>
+              <td>22489.1944ms</td>
+            </tr>
+<tr>
+              <td>4. Concurrent scrap analyses do not corrupt each other</td>
+              <td class="status-pass">PASSED</td>
+              <td>1785.6161999999968ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">integrations-live.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>1. Supabase Storage: Bucket verification &amp; direct image upload</td>
+              <td class="status-pass">PASSED</td>
+              <td>600.6143000000002ms</td>
+            </tr>
+<tr>
+              <td>2. Supabase Storage API: GET /api/v1/storage/image retrieves signed URL with auth</td>
+              <td class="status-pass">PASSED</td>
+              <td>497.41219999999976ms</td>
+            </tr>
+<tr>
+              <td>3. AI Scrap Analysis: Stores image reference in PostgreSQL and returns detected materials</td>
+              <td class="status-pass">PASSED</td>
+              <td>2005.7066000000004ms</td>
+            </tr>
+<tr>
+              <td>4. Razorpay Provider: Validates HMAC-SHA256 signature and rejects fraudulent attempts</td>
+              <td class="status-pass">PASSED</td>
+              <td>4.517399999999725ms</td>
+            </tr>
+<tr>
+              <td>5. Full E2E Chain: Scrap Image → Storage → Analysis → Pickup → Verification → Payment → Rewards → Journey</td>
+              <td class="status-pass">PASSED</td>
+              <td>25129.6472ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">runtime-qa-golden-path.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>Step 1: Citizen login works with real Supabase Auth account</td>
+              <td class="status-pass">PASSED</td>
+              <td>1898.4283999999998ms</td>
+            </tr>
+<tr>
+              <td>Step 2 &amp; 3: Citizen creates pickup successfully; real OTP appears and is saved in Supabase</td>
+              <td class="status-pass">PASSED</td>
+              <td>2610.3738999999996ms</td>
+            </tr>
+<tr>
+              <td>Step 4: Citizen logout / unauthenticated session returns 401 Unauthorized</td>
+              <td class="status-pass">PASSED</td>
+              <td>14.589599999999336ms</td>
+            </tr>
+<tr>
+              <td>Step 5: Separate Collector logs in and discovers the pending pickup</td>
+              <td class="status-pass">PASSED</td>
+              <td>2333.7007000000012ms</td>
+            </tr>
+<tr>
+              <td>Step 6: Accept → onTheWay → arrived works and persists in Supabase</td>
+              <td class="status-pass">PASSED</td>
+              <td>10078.5012ms</td>
+            </tr>
+<tr>
+              <td>Step 8 (Negative QA): Backend rejects incorrect OTP and invalid state transitions</td>
+              <td class="status-pass">PASSED</td>
+              <td>4181.142600000003ms</td>
+            </tr>
+<tr>
+              <td>Step 7: Collector enters actual OTP + scale weight + final amount; status becomes verified</td>
+              <td class="status-pass">PASSED</td>
+              <td>3490.862299999997ms</td>
+            </tr>
+<tr>
+              <td>Step 9: Successful verification completes payment and credits rewards exactly once</td>
+              <td class="status-pass">PASSED</td>
+              <td>8702.425500000005ms</td>
+            </tr>
+<tr>
+              <td>Step 11: Duplicate payment / verification taps do not create duplicate rewards or payment records</td>
+              <td class="status-pass">PASSED</td>
+              <td>2024.472299999994ms</td>
+            </tr>
+<tr>
+              <td>Step 10: Citizen re-login shows completed pickup, real rewards balance, and real recycling journey</td>
+              <td class="status-pass">PASSED</td>
+              <td>5819.697699999997ms</td>
+            </tr>
+<tr>
+              <td>Step 12: Network / API failure returns structured error and is not silently treated as success</td>
+              <td class="status-pass">PASSED</td>
+              <td>324.5515000000014ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">supabase-live.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>1. Live DB Schema: Verifies required tables and seeded catalog exist</td>
+              <td class="status-pass">PASSED</td>
+              <td>253.57679999999982ms</td>
+            </tr>
+<tr>
+              <td>2. Live Supabase RLS: Anon client cannot read restricted profiles</td>
+              <td class="status-pass">PASSED</td>
+              <td>144.54099999999926ms</td>
+            </tr>
+<tr>
+              <td>3. Live Supabase RLS: Authenticated citizen sees only own profile</td>
+              <td class="status-pass">PASSED</td>
+              <td>138.51920000000064ms</td>
+            </tr>
+<tr>
+              <td>4. Live Supabase RLS: Non-admin citizen cannot read admin_audit_logs</td>
+              <td class="status-pass">PASSED</td>
+              <td>116.12199999999939ms</td>
+            </tr>
+<tr>
+              <td>5. Live Auth &amp; Profile Endpoint: /api/v1/users/me with real Supabase JWT</td>
+              <td class="status-pass">PASSED</td>
+              <td>917.9927000000007ms</td>
+            </tr>
+<tr>
+              <td>6. Live Scrap Rates: /api/v1/scrap/rates fetched directly from live DB</td>
+              <td class="status-pass">PASSED</td>
+              <td>243.78909999999996ms</td>
+            </tr>
+<tr>
+              <td>7. Live Pickup Creation: Inserts real row into live pickup_requests table</td>
+              <td class="status-pass">PASSED</td>
+              <td>3006.1459999999997ms</td>
+            </tr>
+<tr>
+              <td>8. Live State Transitions: Collector advances pickup (accepted -&gt; onTheWay -&gt; arrived)</td>
+              <td class="status-pass">PASSED</td>
+              <td>6957.887499999999ms</td>
+            </tr>
+<tr>
+              <td>9. Live Pickup Verification: Collector enters OTP and scale weight on live DB</td>
+              <td class="status-pass">PASSED</td>
+              <td>3821.5463ms</td>
+            </tr>
+<tr>
+              <td>10. Live Database State Machine Trigger: Direct SQL rejection of illegal transition</td>
+              <td class="status-pass">PASSED</td>
+              <td>110.41649999999936ms</td>
+            </tr>
+<tr>
+              <td>11. Live Payment &amp; Rewards: Verifies payment, marks completed, credits live ledger</td>
+              <td class="status-pass">PASSED</td>
+              <td>8002.9202000000005ms</td>
+            </tr>
+<tr>
+              <td>12. Live Recycling Journey: Queries journey for completed pickup</td>
+              <td class="status-pass">PASSED</td>
+              <td>1194.9118000000017ms</td>
+            </tr>
+<tr>
+              <td>13. Live Auth: loginWithPhone returns valid real Supabase JWT</td>
+              <td class="status-pass">PASSED</td>
+              <td>1778.4873000000007ms</td>
+            </tr>
+<tr>
+              <td>14. Live Security: Missing JWT returns 401 Unauthorized</td>
+              <td class="status-pass">PASSED</td>
+              <td>16.403700000002573ms</td>
+            </tr>
+<tr>
+              <td>15. Live Security: Expired or malformed JWT returns 401 Unauthorized</td>
+              <td class="status-pass">PASSED</td>
+              <td>124.3797999999988ms</td>
+            </tr>
+<tr>
+              <td>16. Live Security: Citizen JWT cannot access collector-only operations (403)</td>
+              <td class="status-pass">PASSED</td>
+              <td>351.2344000000012ms</td>
+            </tr>
+<tr>
+              <td>17. Live Security: Citizen JWT cannot access admin-only operations (403)</td>
+              <td class="status-pass">PASSED</td>
+              <td>331.7410000000018ms</td>
+            </tr>
+<tr>
+              <td>18. Live Security: Collector JWT cannot access admin-only operations (403)</td>
+              <td class="status-pass">PASSED</td>
+              <td>361.7837999999974ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+      <div class="suite-header">reward-rules.test.ts</div>
+      <table>
+        <thead><tr><th>Test</th><th>Status</th><th>Duration</th></tr></thead>
+        <tbody>
+        <tr>
+              <td>returns 0 points when final verified bill is strictly below ₹500</td>
+              <td class="status-pass">PASSED</td>
+              <td>1.5184000000000424ms</td>
+            </tr>
+<tr>
+              <td>returns exactly 10% (floored) when final verified bill is ₹500 or higher</td>
+              <td class="status-pass">PASSED</td>
+              <td>0.3733999999999469ms</td>
+            </tr>
+<tr>
+              <td>returns 10% on any positive transaction amount without minimum threshold</td>
+              <td class="status-pass">PASSED</td>
+              <td>0.3243999999999687ms</td>
+            </tr>
+<tr>
+              <td>uses correct 10% reward rate and ₹500 citizen threshold</td>
+              <td class="status-pass">PASSED</td>
+              <td>0.16790000000003147ms</td>
+            </tr>
+        </tbody>
+      </table>
+
+  
+
+  <div class="footer">
+    E-Kabadi Automated QA Pipeline &middot; Generated by generate-qa-report.ts
+  </div>
+</body>
+</html>

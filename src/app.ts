@@ -23,6 +23,7 @@ import recyclingRoutes from './routes/recycling.routes';
 import notificationsRoutes from './routes/notifications.routes';
 import impactRoutes from './routes/impact.routes';
 import adminRoutes from './routes/admin.routes';
+import storageRoutes from './routes/storage.routes';
 
 const app: Express = express();
 
@@ -59,6 +60,7 @@ app.use('/api/v1/recycling', recyclingRoutes);
 app.use('/api/v1/notifications', notificationsRoutes);
 app.use('/api/v1/impact', impactRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/storage', storageRoutes);
 
 // 404 Route Handler
 app.use((req: Request, res: Response) => {

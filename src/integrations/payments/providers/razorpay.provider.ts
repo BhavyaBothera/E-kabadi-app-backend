@@ -27,6 +27,7 @@ export class RazorpayProvider implements PaymentProvider {
           Authorization: `Basic ${auth}`,
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(15000),
         body: JSON.stringify({
           amount: Math.round(params.amount * 100), // in paise
           currency: 'INR',
@@ -37,10 +38,12 @@ export class RazorpayProvider implements PaymentProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
+        logger.error(`Razorpay order creation failed: HTTP ${response.status} - ${errorText}`);
         throw new Error(`Razorpay create order failed: ${response.status} - ${errorText}`);
       }
 
       const order = (await response.json()) as { id: string; amount: number; currency: string };
+      logger.info(`[RazorpayProvider] Order created: ${order.id} for amount ₹${order.amount / 100}`);
       return {
         orderId: order.id,
         amount: order.amount / 100,

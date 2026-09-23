@@ -142,11 +142,21 @@ export class PaymentService {
     if (isMock) {
       inMemoryStore.payments.set(params.pickupId, paymentRecord);
     } else {
+      let collectorId = pickup.collectorId;
+      if (!collectorId) {
+        const { data: col } = await supabaseAdmin
+          .from('collector_profiles')
+          .select('user_id')
+          .limit(1)
+          .maybeSingle();
+        if (col?.user_id) collectorId = col.user_id;
+      }
+
       await supabaseAdmin.from('payments').insert({
         id: paymentId,
         pickup_id: params.pickupId,
         citizen_id: pickup.citizenId,
-        collector_id: pickup.collectorId,
+        collector_id: collectorId,
         amount: authoritativeAmount,
         method: paymentRecord.method,
         status: 'SUCCESS',

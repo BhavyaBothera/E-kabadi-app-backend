@@ -105,3 +105,11 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     next(error);
   }
 };
+
+export const optionalAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+  return requireAuth(req, res, next);
+};

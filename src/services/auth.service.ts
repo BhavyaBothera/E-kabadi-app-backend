@@ -252,20 +252,7 @@ export class AuthService {
       .maybeSingle();
 
     if (!profile) {
-      // Return demo fallback if DB not populated
-      return {
-        id: userId,
-        name: 'Aarav Sharma',
-        phone: '+919876512345',
-        email: 'aarav.sharma@example.com',
-        role: 'citizen',
-        address: 'Flat 402, Green Valley Apts, Sector 62, Noida, UP',
-        rating: 4.8,
-        isVerified: true,
-        ecoPoints: 840,
-        ecoCoins: 1250,
-        profilePhoto: '',
-      };
+      throw new NotFoundError(`User with ID ${userId} not found`, 'USER_NOT_FOUND');
     }
 
     const { data: roleRow } = await supabaseAdmin
@@ -301,11 +288,11 @@ export class AuthService {
       phone: profile.phone,
       email: profile.email,
       role,
-      address: addressRow?.address_line || collectorRow?.service_area || 'Sector 62, Noida',
-      rating: parseFloat(profile.rating || '4.8'),
-      isVerified: profile.is_verified ?? true,
-      ecoPoints: citizenRow?.eco_points_balance ?? 840,
-      ecoCoins: collectorRow?.eco_coins_balance ?? 1250,
+      address: addressRow?.address_line || collectorRow?.service_area || '',
+      rating: parseFloat(profile.rating || '0.0'),
+      isVerified: profile.is_verified ?? false,
+      ecoPoints: citizenRow?.eco_points_balance ?? 0,
+      ecoCoins: collectorRow?.eco_coins_balance ?? 0,
       profilePhoto: profile.profile_photo || '',
     };
   }

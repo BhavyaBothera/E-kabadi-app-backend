@@ -11,7 +11,12 @@
     "test:live": "vitest run --config vitest.live.config.ts",
     "test:watch": "vitest",
     "lint": "eslint src/ --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "qa:offline": "vitest run && echo ✅ Offline QA passed",
+    "qa:live": "vitest run --config vitest.live.config.ts && echo ✅ Live QA passed",
+    "qa": "vitest run --config vitest.qa.config.ts && npx tsx scripts/generate-qa-report.ts",
+    "qa:report": "npx tsx scripts/generate-qa-report.ts",
+    "qa:cleanup": "npx tsx scripts/cleanup-test-data.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

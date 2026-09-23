@@ -31,6 +31,7 @@ Return ONLY a valid JSON array of objects with the following schema:
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(30000),
           body: JSON.stringify({
             contents: [
               {
@@ -54,6 +55,7 @@ Return ONLY a valid JSON array of objects with the following schema:
 
       if (!response.ok) {
         const errText = await response.text();
+        logger.error(`Gemini API HTTP ${response.status}: ${errText}`);
         throw new Error(`Gemini API error: ${response.status} - ${errText}`);
       }
 
@@ -61,32 +63,47 @@ Return ONLY a valid JSON array of objects with the following schema:
         candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
       };
       const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-      const parsedItems = JSON.parse(text) as Array<{
-        category: string;
-        subType: string;
+
+      let parsedItems: Array<{
+        category?: string;
+        subType?: string;
         estimatedWeightKg?: number;
         confidenceScore?: number;
         notes?: string;
-      }>;
+      }> = [];
+
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          parsedItems = parsed;
+        } else if (parsed && Array.isArray(parsed.items)) {
+          parsedItems = parsed.items;
+        } else if (parsed && typeof parsed === 'object') {
+          parsedItems = [parsed];
+        }
+      } catch (parseErr) {
+        logger.error('Failed to parse Gemini JSON output:', { text, parseErr });
+        throw new Error('Gemini API returned an unparseable response structure');
+      }
 
       const items = parsedItems.map((item, idx) => ({
         id: `AI-GEM-${idx + 1}`,
         category: item.category || 'General Scrap',
         subType: item.subType || 'Mixed Recyclables',
-        weightKg: item.estimatedWeightKg || 1.0,
+        weightKg: Math.max(0.1, Number(item.estimatedWeightKg) || 1.0),
         pricePerKg: 30.0,
-        estimatedTotal: (item.estimatedWeightKg || 1.0) * 30.0,
-        confidenceScore: item.confidenceScore || 0.88,
+        estimatedTotal: (Math.max(0.1, Number(item.estimatedWeightKg) || 1.0)) * 30.0,
+        confidenceScore: Math.min(1.0, Math.max(0.1, Number(item.confidenceScore) || 0.85)),
         notes: item.notes || 'Detected by Gemini Vision',
       }));
 
       return {
         items,
-        warnings: [],
+        warnings: items.length === 0 ? ['No recyclable materials clearly recognized in image'] : [],
         rawProviderResponse: json,
       };
-    } catch (error) {
-      logger.error('Gemini vision analysis failed, falling back to basic result', { error });
+    } catch (error: any) {
+      logger.error('Gemini vision analysis failed:', error);
       throw error;
     }
   }

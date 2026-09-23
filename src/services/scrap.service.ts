@@ -158,7 +158,11 @@ export class ScrapService {
 
   async analyzeScrap(input: AnalyzeScrapInput, userId?: string): Promise<ScrapAnalysisItem[]> {
     const result = await aiService.analyzeScrapImage(input.image, userId, input.isFromCamera);
-    return result.items;
+    return result.items.map((item) => ({
+      ...item,
+      imageUrl: result.imageUrl,
+      storagePath: result.storagePath,
+    }));
   }
 }
 

@@ -78,15 +78,46 @@ export class RecyclingService {
 
     if (!journey) {
       const journeyId = `JRN-${pickupId.replace('PK-', '')}`;
+
+      const { data: pickup } = await supabaseAdmin
+        .from('pickup_requests')
+        .select('id, citizen_id, collector_id, final_verified_weight, citizen_address')
+        .eq('id', pickupId)
+        .maybeSingle();
+
+      let citizenName = 'Citizen';
+      let collectorName = 'Collector';
+
+      if (pickup?.citizen_id) {
+        const { data: citProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('name')
+          .eq('id', pickup.citizen_id)
+          .maybeSingle();
+        if (citProfile?.name) citizenName = citProfile.name;
+      }
+
+      if (pickup?.collector_id) {
+        const { data: colProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('name')
+          .eq('id', pickup.collector_id)
+          .maybeSingle();
+        if (colProfile?.name) collectorName = colProfile.name;
+      }
+
+      const weightKg = Number(pickup?.final_verified_weight) > 0 ? Number(pickup?.final_verified_weight) : 5.0;
+      const location = pickup?.citizen_address || 'Sector 62, Noida';
+
       await supabaseAdmin.from('recycling_journeys').insert({
         id: journeyId,
         pickup_id: pickupId,
-        material_category: 'Plastic & Paper Recyclables',
-        weight_kg: 10.5,
-        citizen_name: 'Citizen',
-        collector_name: 'Ramesh Kumar',
-        recycler_facility: 'GreenLoop Industrial Processing Plant',
-        certificate_id: `CERT-${Date.now()}`,
+        material_category: 'Segregated Recyclables',
+        weight_kg: weightKg,
+        citizen_name: citizenName,
+        collector_name: collectorName,
+        recycler_facility: 'GreenLoop Authorized Processing Plant',
+        certificate_id: `CERT-EK-${Date.now()}`,
         status: 'collected',
       });
 
@@ -96,7 +127,7 @@ export class RecyclingService {
           step_order: 1,
           title: 'Scrap Collected',
           description: 'Scrap picked up from doorstep and verified with OTP.',
-          location: 'Sector 62, Noida',
+          location: location,
           is_completed: true,
         },
         {
@@ -104,7 +135,7 @@ export class RecyclingService {
           step_order: 2,
           title: 'Collector Hub Sorting',
           description: 'Material segregated by category at regional hub.',
-          location: 'Noida Sector 63 Hub',
+          location: 'Regional Collection Hub',
           is_completed: true,
         },
         {

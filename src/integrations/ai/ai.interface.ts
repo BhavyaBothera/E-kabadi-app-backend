@@ -7,12 +7,16 @@ export interface ScrapAnalysisItem {
   estimatedTotal: number;
   confidenceScore: number;
   notes: string;
+  imageUrl?: string;
+  storagePath?: string;
 }
 
 export interface ScrapAnalysisResult {
   items: ScrapAnalysisItem[];
   warnings?: string[];
   rawProviderResponse?: unknown;
+  imageUrl?: string;
+  storagePath?: string;
 }
 
 export interface AiProvider {

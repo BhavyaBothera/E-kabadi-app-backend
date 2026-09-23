@@ -267,18 +267,7 @@ export class PickupService {
       citizenName: citizen.name,
       citizenAddress: pickup.citizen_address,
       citizenPhone: citizen.phone,
-      items: items.length > 0 ? items : [
-        {
-          id: 'SC-1',
-          category: 'Plastic',
-          subType: 'PET Bottles',
-          weightKg: 1.4,
-          pricePerKg: 50.0,
-          estimatedTotal: 70.0,
-          confidenceScore: 0.94,
-          notes: 'Standard recyclable bottles',
-        },
-      ],
+      items: items,
       status: pickup.status as PickupStatus,
       totalEstimatedPrice: parseFloat(pickup.total_estimated_price || '0'),
       finalVerifiedPrice: parseFloat(pickup.final_verified_price || '0'),
@@ -286,11 +275,11 @@ export class PickupService {
       scheduledDate: pickup.scheduled_date,
       timeSlot: pickup.time_slot,
       instructions: pickup.instructions || '',
-      collectorId: pickup.collector_id || 'COL-892',
-      collectorName: collector?.name || 'Ramesh Kumar',
-      collectorPhone: collector?.phone || '+91 98765 43210',
-      collectorRating: collector?.rating || 4.8,
-      collectorDistance: pickup.collector_distance || '1.2 km away',
+      collectorId: pickup.collector_id || '',
+      collectorName: collector?.name || '',
+      collectorPhone: collector?.phone || '',
+      collectorRating: collector?.rating || 0,
+      collectorDistance: pickup.collector_distance || '',
       otpCode: pickup.otp_code,
       createdAt: pickup.created_at || 'Just now',
     };
@@ -314,11 +303,7 @@ export class PickupService {
       .order('created_at', { ascending: false });
 
     if (!pickups || pickups.length === 0) {
-      // Fallback demo pickups
-      return [
-        await this.getPickupById('PK-9481').catch(() => this.getMockPickup('PK-9481', 'onTheWay')),
-        await this.getPickupById('PK-8320').catch(() => this.getMockPickup('PK-8320', 'completed')),
-      ];
+      return [];
     }
 
     return Promise.all(pickups.map((p) => this.getPickupById(p.id)));
@@ -342,7 +327,7 @@ export class PickupService {
       .order('created_at', { ascending: false });
 
     if (!pickups || pickups.length === 0) {
-      return [await this.getMockPickup('PK-9481', 'onTheWay')];
+      return [];
     }
 
     return Promise.all(pickups.map((p) => this.getPickupById(p.id)));
@@ -369,17 +354,25 @@ export class PickupService {
       const inMem = inMemoryStore.pickups.get(pickupId);
       if (inMem) {
         inMem.status = input.status;
+        if (['accepted', 'onTheWay', 'arrived'].includes(input.status) && userId) {
+          inMem.collector_id = userId;
+        }
         inMemoryStore.pickups.set(pickupId, inMem);
       }
       return this.getPickupById(pickupId);
     }
 
+    const updatePayload: Record<string, any> = {
+      status: input.status,
+      updated_at: new Date().toISOString(),
+    };
+    if (['accepted', 'onTheWay', 'arrived'].includes(input.status) && userId) {
+      updatePayload.collector_id = userId;
+    }
+
     await supabaseAdmin
       .from('pickup_requests')
-      .update({
-        status: input.status,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', pickupId);
 
     // 3. Status History
